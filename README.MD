@@ -10,7 +10,7 @@ supports ROS 2 Foxy, Humble, and Jazzy distributions.
 * [Orbbec ROS2 SDK](#orbbec-ros2-sdk)
   * [Table of Contents](#table-of-contents)
   * [Usage with Docker Compose](#usage-with-docker-compose)
-    * [Setup for pulling container from ghcr.io](#setup-for-pulling-container-from-ghcr.io)
+    * [Setup for pulling container from ghcr.io](#setup-for-pulling-container-from-ghcrio)
     * [Setup for building the container on device](#setup-for-building-the-container-on-device)
   * [Installation Instructions](#installation-instructions)
   * [Getting start](#getting-start)
