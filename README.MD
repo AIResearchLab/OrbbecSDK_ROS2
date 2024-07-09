@@ -9,6 +9,9 @@ supports ROS 2 Foxy, Humble, and Jazzy distributions.
 <!-- TOC -->
 * [Orbbec ROS2 SDK](#orbbec-ros2-sdk)
   * [Table of Contents](#table-of-contents)
+  * [Usage with Docker Compose](#usage-with-docker-compose)
+    * [Setup for pulling container from ghcr.io](#setup-for-pulling-container-from-ghcr.io)
+    * [Setup for building the container on device](#setup-for-building-the-container-on-device)
   * [Installation Instructions](#installation-instructions)
   * [Getting start](#getting-start)
   * [Launch parameters](#launch-parameters)
@@ -34,6 +37,51 @@ supports ROS 2 Foxy, Humble, and Jazzy distributions.
   * [Other useful links](#other-useful-links)
   * [License](#license)
 <!-- TOC -->
+
+## Usage with Docker Compose
+
+Add the following snippet under `services` to any compose.yaml file to add this container.
+
+```bash
+  orbbec:
+    image: ghcr.io/airesearchlab/orbbec:humble
+    command: ros2 launch orbbec_camera femto_bolt.launch.py
+    restart: unless-stopped
+    privileged: true
+    network_mode: host
+    volumes:
+      - /dev:/dev
+```
+
+### Setup for pulling container from ghcr.io
+
+Clone this reposiotory
+
+```bash
+git clone https://github.com/AIResearchLab/OrbbecSDK_ROS2.git
+```
+
+Pull the Docker image and start compose (No need to run `docker compose build`)
+```bash
+cd src/OrbbecSDK_ROS2/docker
+docker compose pull
+docker compose up
+```
+
+### Setup for building the container on device
+
+Clone this reposiotory
+
+```bash
+git clone https://github.com/AIResearchLab/OrbbecSDK_ROS2.git
+```
+
+Build the Docker image and start compose
+```bash
+cd src/OrbbecSDK_ROS2/docker
+docker compose -f compose-build.yaml build
+docker compose -f compose-build.yaml up
+```
 
 ## Installation Instructions
 
