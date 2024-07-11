@@ -10,7 +10,7 @@ supports ROS 2 Foxy, Humble, and Jazzy distributions.
 * [Orbbec ROS2 SDK](#orbbec-ros2-sdk)
   * [Table of Contents](#table-of-contents)
   * [Usage with Docker Compose](#usage-with-docker-compose)
-    * [Setup for pulling container from ghcr.io](#setup-for-pulling-container-from-ghcr.io)
+    * [Setup for pulling container from ghcr.io](#setup-for-pulling-container-from-ghcrio)
     * [Setup for building the container on device](#setup-for-building-the-container-on-device)
   * [Installation Instructions](#installation-instructions)
   * [Getting start](#getting-start)
@@ -300,6 +300,9 @@ The following are the launch parameters available:
   attempt to reset the camera up to three times. This setting aims to prevent USB 3.0 devices from being incorrectly
   recognized as USB 2.0. It is recommended to set this parameter to `false` when using a USB 2.0 connection to avoid
   unnecessary resets.
+
+- `enable_3d_reconstruction_mode`: Enables 3D reconstruction mode. Default is `false`. When set to `true`, the camera 
+laser operates in on-off mode, capturing IR images (laser off) for VSLAM localization and depth images (laser on) for point cloud computation.
 
 **IMPORTANT**: *Please carefully read the instructions regarding software filtering settings
 at [this link](https://www.orbbec.com/docs/g330-use-depth-post-processing-blocks/). If you are uncertain, do not modify
