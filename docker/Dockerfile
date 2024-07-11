@@ -51,6 +51,8 @@ RUN . /opt/ros/humble/setup.sh && colcon build --event-handlers  console_direct+
 
 WORKDIR /
 
+RUN mkdir -p /etc/udev/rules.d/
+
 RUN cp ${WORKSPACE_ROOT}/src/OrbbecSDK_ROS2/orbbec_camera/scripts/99-obsensor-libusb.rules /etc/udev/rules.d/99-obsensor-libusb.rules
 
 #############################################################################################################################
@@ -59,7 +61,6 @@ RUN cp ${WORKSPACE_ROOT}/src/OrbbecSDK_ROS2/orbbec_camera/scripts/99-obsensor-li
 #####
 #############################################################################################################################
 
-RUN rm -rf ${WORKSPACE_ROOT}/src
 RUN rm -rf ${WORKSPACE_ROOT}/log
 RUN rm -rf ${WORKSPACE_ROOT}/build
 
