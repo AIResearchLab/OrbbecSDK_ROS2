@@ -21,7 +21,6 @@ RUN apt-get update -y
 RUN apt-get install -y --no-install-recommends ros-dev-tools \
                                                libgflags-dev \
                                                nlohmann-json3-dev \
-                                               libusb-1.0-0-dev \
                                                ros-$ROS_DISTRO-tf2-eigen \
                                                ros-$ROS_DISTRO-diagnostic-updater \
                                                ros-$ROS_DISTRO-diagnostic-msgs \
@@ -29,7 +28,8 @@ RUN apt-get install -y --no-install-recommends ros-dev-tools \
                                                ros-$ROS_DISTRO-image-publisher \
                                                ros-$ROS_DISTRO-camera-info-manager \
                                                ros-$ROS_DISTRO-rmw-cyclonedds-cpp \
-                                               udev
+                                               libudev-dev \
+                                               libusb-dev
 
 RUN apt-get clean
 
@@ -47,9 +47,11 @@ RUN rosdep install --from-paths ${WORKSPACE_ROOT}/src -y --ignore-src
 
 WORKDIR ${WORKSPACE_ROOT}
 
-RUN . /opt/ros/humble/setup.sh && colcon build
+RUN . /opt/ros/humble/setup.sh && colcon build --event-handlers  console_direct+  --cmake-args  -DCMAKE_BUILD_TYPE=Release
 
 WORKDIR /
+
+RUN cp ${WORKSPACE_ROOT}/src/OrbbecSDK_ROS2/orbbec_camera/scripts/99-obsensor-libusb.rules /etc/udev/rules.d/99-obsensor-libusb.rules
 
 #############################################################################################################################
 #####
@@ -60,10 +62,6 @@ WORKDIR /
 RUN rm -rf ${WORKSPACE_ROOT}/src
 RUN rm -rf ${WORKSPACE_ROOT}/log
 RUN rm -rf ${WORKSPACE_ROOT}/build
-
-RUN apt-get purge --yes libgflags-dev \
-                        nlohmann-json3-dev \
-                        libusb-1.0-0-dev
 
 RUN rm -rf /var/lib/apt/lists/*
 RUN rm -rf /tmp/*
@@ -86,12 +84,9 @@ WORKDIR /
 
 COPY --from=base / /
 
-RUN wget https://raw.githubusercontent.com/AIResearchLab/astra_legacy_ros/main/astra_camera/scripts/56-orbbec-usb.rules && \
-    wget https://raw.githubusercontent.com/AIResearchLab/OrbbecSDK_ROS2/main/orbbec_camera/scripts/99-obsensor-libusb.rules && \
-    cp 99-obsensor-libusb.rules /etc/udev/rules.d/99-obsensor-libusb.rules
+RUN sh -c 'echo 128 > /sys/module/usbcore/parameters/usbfs_memory_mb'
 
 COPY docker/workspace_entrypoint.sh /workspace_entrypoint.sh
-
 RUN chmod +x /workspace_entrypoint.sh
 
 ENTRYPOINT [ "/workspace_entrypoint.sh" ]
