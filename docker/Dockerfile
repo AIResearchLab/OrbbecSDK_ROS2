@@ -85,8 +85,6 @@ WORKDIR /
 
 COPY --from=base / /
 
-RUN echo 128 > /sys/module/usbcore/parameters/usbfs_memory_mb
-
 COPY docker/workspace_entrypoint.sh /workspace_entrypoint.sh
 RUN chmod +x /workspace_entrypoint.sh
 
