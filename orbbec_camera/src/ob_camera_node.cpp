@@ -996,6 +996,11 @@ void OBCameraNode::getParameters() {
   setAndGetNodeParameter<bool>(retry_on_usb3_detection_failure_, "retry_on_usb3_detection_failure",
                                false);
   setAndGetNodeParameter<int>(laser_energy_level_, "laser_energy_level", -1);
+  setAndGetNodeParameter<bool>(enable_3d_reconstruction_mode_, "enable_3d_reconstruction_mode",
+                               false);
+  if (enable_3d_reconstruction_mode_) {
+    laser_on_off_mode_ = 1;  // 0 off, 1 on-off, 1 off-on
+  }
 }
 
 void OBCameraNode::setupTopics() {
@@ -1460,6 +1465,10 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
       tf_published_ = true;
     }
     depth_frame_ = frame_set->getFrame(OB_FRAME_DEPTH);
+    bool depth_laser_status = false;
+    if (depth_frame_ && depth_frame_->hasMetadata(OB_FRAME_METADATA_TYPE_LASER_STATUS)) {
+      depth_laser_status = depth_frame_->getMetadataValue(OB_FRAME_METADATA_TYPE_LASER_STATUS) == 1;
+    }
 
     auto device_info = device_->getDeviceInfo();
     CHECK_NOTNULL(device_info.get());
@@ -1484,8 +1493,10 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
     }
     if (enable_stream_[COLOR] && color_frame) {
       std::unique_lock<std::mutex> lock(color_frame_queue_lock_);
-      color_frame_queue_.push(frame_set);
-      color_frame_queue_cv_.notify_all();
+      if (!enable_3d_reconstruction_mode_ || depth_laser_status) {
+        color_frame_queue_.push(frame_set);
+        color_frame_queue_cv_.notify_all();
+      }
     } else {
       publishPointCloud(frame_set);
     }
@@ -1502,12 +1513,21 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
           continue;
         }
         if (stream_index == DEPTH) {
-          frame = depth_frame_;
+          frame = depth_laser_status ? depth_frame_ : nullptr;
         }
-        std::shared_ptr<ob::Frame> irFrame = decodeIRMJPGFrame(frame);
-        if (irFrame) {
-          onNewFrameCallback(irFrame, stream_index);
-        } else {
+        auto is_ir_frame = frame_type == OB_FRAME_IR_LEFT || frame_type == OB_FRAME_IR_RIGHT ||
+                           frame_type == OB_FRAME_IR;
+        if (is_ir_frame) {
+          std::shared_ptr<ob::Frame> ir_frame =
+              frame->format() == OB_FORMAT_MJPG ? decodeIRMJPGFrame(frame) : frame;
+          bool ir_laser_status = false;
+          if (ir_frame && ir_frame->hasMetadata(OB_FRAME_METADATA_TYPE_LASER_STATUS)) {
+            ir_laser_status = ir_frame->getMetadataValue(OB_FRAME_METADATA_TYPE_LASER_STATUS) == 1;
+          }
+          if (ir_frame && (!enable_3d_reconstruction_mode_ || !ir_laser_status)) {
+            onNewFrameCallback(ir_frame, stream_index);
+          }
+        } else if (frame_type == OB_FRAME_DEPTH) {
           onNewFrameCallback(frame, stream_index);
         }
       }
@@ -1629,6 +1649,9 @@ bool OBCameraNode::decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame> &fr
 
 std::shared_ptr<ob::Frame> OBCameraNode::decodeIRMJPGFrame(
     const std::shared_ptr<ob::Frame> &frame) {
+  if (frame == nullptr) {
+    return nullptr;
+  }
   if (frame->format() == OB_FORMAT_MJPEG &&
       (frame->type() == OB_FRAME_IR || frame->type() == OB_FRAME_IR_LEFT ||
        frame->type() == OB_FRAME_IR_RIGHT)) {
@@ -1655,7 +1678,7 @@ std::shared_ptr<ob::Frame> OBCameraNode::decodeIRMJPGFrame(
     return irFrame;
   }
 
-  return nullptr;
+  return frame;
 }
 
 void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame> &frame,
@@ -2071,21 +2094,21 @@ void OBCameraNode::calcAndPublishStaticTransform() {
     auto Q = rotationMatrixToQuaternion(ex.rot);
     Q = quaternion_optical * Q * quaternion_optical.inverse();
     tf2::Vector3 trans(ex.trans[0], ex.trans[1], ex.trans[2]);
-    RCLCPP_INFO_STREAM(logger_, "Publishing static transform from " << stream_name_[base_stream_]
-                                                                    << " to "
-                                                                    << stream_name_[stream_index]);
-    RCLCPP_INFO_STREAM(logger_, "Translation " << trans[0] << ", " << trans[1] << ", " << trans[2]);
-    RCLCPP_INFO_STREAM(logger_, "Rotation " << Q.getX() << ", " << Q.getY() << ", " << Q.getZ()
-                                            << ", " << Q.getW());
     auto timestamp = node_->now();
     if (stream_index.first != base_stream_.first) {
-      if (stream_index.first == OB_STREAM_IR_RIGHT) {
+      if (stream_index.first == OB_STREAM_IR_RIGHT && base_stream_.first == OB_STREAM_DEPTH) {
         trans[0] = std::abs(trans[0]);  // because left and right ir calibration is error
       }
       publishStaticTF(timestamp, trans, Q, frame_id_[base_stream_], frame_id_[stream_index]);
     }
     publishStaticTF(timestamp, zero_trans, quaternion_optical, frame_id_[stream_index],
                     optical_frame_id_[stream_index]);
+    RCLCPP_INFO_STREAM(logger_, "Publishing static transform from " << stream_name_[stream_index]
+                                                                    << " to "
+                                                                    << stream_name_[base_stream_]);
+    RCLCPP_INFO_STREAM(logger_, "Translation " << trans[0] << ", " << trans[1] << ", " << trans[2]);
+    RCLCPP_INFO_STREAM(logger_, "Rotation " << Q.getX() << ", " << Q.getY() << ", " << Q.getZ()
+                                            << ", " << Q.getW());
   }
 
   if ((pid == FEMTO_BOLT_PID || pid == FEMTO_MEGA_PID) && enable_stream_[DEPTH] &&
@@ -2153,7 +2176,7 @@ void OBCameraNode::calcAndPublishStaticTransform() {
                           "Failed to get " << frame_id << " extrinsic: " << e.getMessage());
       ex = OBExtrinsic({{1, 0, 0, 0, 1, 0, 0, 0, 1}, {0, 0, 0}});
     }
-    ex.trans[0] = std::abs(ex.trans[0]);  // because left and right ir calibration is error
+    ex.trans[0] = -std::abs(ex.trans[0]);
     depth_to_other_extrinsics_[INFRA2] = ex;
     auto ex_msg = obExtrinsicsToMsg(ex, frame_id);
     depth_to_other_extrinsics_publishers_[INFRA2]->publish(ex_msg);
