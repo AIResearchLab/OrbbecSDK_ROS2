@@ -18,25 +18,66 @@ ENV WORKSPACE_ROOT=/orbbec
 WORKDIR /
 
 RUN apt-get update -y
-RUN apt-get install -y --no-install-recommends ros-dev-tools \
-                                               libgflags-dev \
-                                               nlohmann-json3-dev \
-                                               ros-$ROS_DISTRO-tf2-eigen \
-                                               ros-$ROS_DISTRO-diagnostic-updater \
-                                               ros-$ROS_DISTRO-diagnostic-msgs \
-                                               ros-$ROS_DISTRO-image-transport \
-                                               ros-$ROS_DISTRO-image-publisher \
-                                               ros-$ROS_DISTRO-camera-info-manager \
-                                               ros-$ROS_DISTRO-rmw-cyclonedds-cpp \
-                                               libudev-dev \
-                                               libusb-dev \
-                                               udev
+    RUN apt-get install -y --no-install-recommends ros-dev-tools \
+                                                libgflags-dev \
+                                                nlohmann-json3-dev \
+                                                ros-$ROS_DISTRO-tf2-eigen \
+                                                ros-$ROS_DISTRO-diagnostic-updater \
+                                                ros-$ROS_DISTRO-diagnostic-msgs \
+                                                ros-$ROS_DISTRO-image-transport \
+                                                ros-$ROS_DISTRO-image-publisher \
+                                                ros-$ROS_DISTRO-camera-info-manager \
+                                                ros-$ROS_DISTRO-rmw-cyclonedds-cpp \
+                                                libudev-dev \
+                                                libusb-dev \
+                                                udev \
+                                                pkg-config \
+                                                ninja-build \
+                                                doxygen \
+                                                clang \
+                                                gcc-multilib \
+                                                g++-multilib \
+                                                python3 \
+                                                nasm \
+                                                libgl1-mesa-dev \
+                                                libsoundio-dev \
+                                                libvulkan-dev \
+                                                libx11-dev \
+                                                libxcursor-dev \
+                                                libxinerama-dev \
+                                                libxrandr-dev \
+                                                libusb-1.0-0-dev \
+                                                libssl-dev \
+                                                libudev-dev \
+                                                mesa-common-dev \
+                                                uuid-dev
 
 RUN apt-get clean
+    
 
 #############################################################################################################################
 #####
 #####   Install Orbbec packages
+#####
+#############################################################################################################################
+
+WORKDIR /SDK
+
+RUN git clone https://github.com/orbbec/OrbbecSDK.git
+
+RUN mkdir -p /etc/udev/rules.d/
+
+RUN cp /SDK/OrbbecSDK/misc/scripts/99-obsensor-libusb.rules /etc/udev/rules.d/99-obsensor-libusb.rules
+
+WORKDIR /SDK/OrbbecSDK/build
+
+RUN cmake .. && \
+    make -j4 && \
+    make install
+
+#############################################################################################################################
+#####
+#####   Install Orbbec ROS2 packages
 #####
 #############################################################################################################################
 
@@ -52,9 +93,7 @@ RUN . /opt/ros/humble/setup.sh && colcon build --event-handlers  console_direct+
 
 WORKDIR /
 
-RUN mkdir -p /etc/udev/rules.d/
-
-RUN cp ${WORKSPACE_ROOT}/src/OrbbecSDK_ROS2/orbbec_camera/scripts/99-obsensor-libusb.rules /etc/udev/rules.d/99-obsensor-libusb.rules
+RUN 
 
 #############################################################################################################################
 #####
@@ -62,6 +101,7 @@ RUN cp ${WORKSPACE_ROOT}/src/OrbbecSDK_ROS2/orbbec_camera/scripts/99-obsensor-li
 #####
 #############################################################################################################################
 
+RUN rm -rf /SDK
 RUN rm -rf ${WORKSPACE_ROOT}/log
 RUN rm -rf ${WORKSPACE_ROOT}/build
 
