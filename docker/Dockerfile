@@ -29,7 +29,8 @@ RUN apt-get install -y --no-install-recommends ros-dev-tools \
                                                ros-$ROS_DISTRO-camera-info-manager \
                                                ros-$ROS_DISTRO-rmw-cyclonedds-cpp \
                                                libudev-dev \
-                                               libusb-dev
+                                               libusb-dev \
+                                               udev
 
 RUN apt-get clean
 
