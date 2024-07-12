@@ -35,8 +35,6 @@ RUN apt-get update -y
                                                 ninja-build \
                                                 doxygen \
                                                 clang \
-                                                gcc-multilib \
-                                                g++-multilib \
                                                 python3 \
                                                 nasm \
                                                 libgl1-mesa-dev \
