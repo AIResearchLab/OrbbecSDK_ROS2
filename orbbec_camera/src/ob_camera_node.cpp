@@ -907,7 +907,7 @@ void OBCameraNode::getParameters() {
   }
 
   setAndGetNodeParameter(publish_tf_, "publish_tf", true);
-  setAndGetNodeParameter(tf_publish_rate_, "tf_publish_rate", 10.0);
+  setAndGetNodeParameter(tf_publish_rate_, "tf_publish_rate", 0.0);
   setAndGetNodeParameter(depth_registration_, "depth_registration", false);
   setAndGetNodeParameter(enable_point_cloud_, "enable_point_cloud", false);
   setAndGetNodeParameter<std::string>(ir_info_url_, "ir_info_url", "");
@@ -1513,7 +1513,7 @@ void OBCameraNode::onNewFrameSetCallback(std::shared_ptr<ob::FrameSet> frame_set
           continue;
         }
         if (stream_index == DEPTH) {
-          frame = depth_laser_status ? depth_frame_ : nullptr;
+          frame = (enable_3d_reconstruction_mode_ && !depth_laser_status) ? nullptr : depth_frame_;
         }
         auto is_ir_frame = frame_type == OB_FRAME_IR_LEFT || frame_type == OB_FRAME_IR_RIGHT ||
                            frame_type == OB_FRAME_IR;
