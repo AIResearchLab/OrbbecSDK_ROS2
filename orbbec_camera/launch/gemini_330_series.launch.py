@@ -1,20 +1,23 @@
+import os
+import yaml
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction, GroupAction
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import PushRosNamespace, ComposableNodeContainer, Node
 from launch_ros.descriptions import ComposableNode
-import os
-import yaml
+
 
 def load_yaml(file_path):
     with open(file_path, 'r') as f:
         return yaml.safe_load(f)
+
 
 def merge_params(default_params, yaml_params):
     for key, value in yaml_params.items():
         if key in default_params:
             default_params[key] = value
     return default_params
+
 
 def convert_value(value):
     if isinstance(value, str):
@@ -32,6 +35,7 @@ def convert_value(value):
             return False
     return value
 
+
 def load_parameters(context, args):
     default_params = {arg.name: LaunchConfiguration(arg.name).perform(context) for arg in args}
     config_file_path = LaunchConfiguration('config_file_path').perform(context)
@@ -44,6 +48,7 @@ def load_parameters(context, args):
         for key, value in default_params.items()
     }
 
+
 def generate_launch_description():
     args = [
         DeclareLaunchArgument('camera_name', default_value='camera'),
@@ -53,7 +58,7 @@ def generate_launch_description():
         DeclareLaunchArgument('device_num', default_value='1'),
         DeclareLaunchArgument('point_cloud_qos', default_value='default'),
         DeclareLaunchArgument('enable_point_cloud', default_value='false'),
-        DeclareLaunchArgument('enable_colored_point_cloud', default_value='true'),
+        DeclareLaunchArgument('enable_colored_point_cloud', default_value='false'),
         DeclareLaunchArgument('connection_delay', default_value='100'),
         DeclareLaunchArgument('color_width', default_value='0'),
         DeclareLaunchArgument('color_height', default_value='0'),
@@ -91,7 +96,7 @@ def generate_launch_description():
         DeclareLaunchArgument('enable_ir_auto_exposure', default_value='true'),
         DeclareLaunchArgument('ir_exposure', default_value='-1'),
         DeclareLaunchArgument('ir_gain', default_value='-1'),
-        DeclareLaunchArgument('enable_sync_output_accel_gyro', default_value='true'),
+        DeclareLaunchArgument('enable_sync_output_accel_gyro', default_value='false'),
         DeclareLaunchArgument('enable_accel', default_value='false'),
         DeclareLaunchArgument('accel_rate', default_value='200hz'),
         DeclareLaunchArgument('accel_range', default_value='4g'),
@@ -116,7 +121,9 @@ def generate_launch_description():
         DeclareLaunchArgument('color_delay_us', default_value='0'),
         DeclareLaunchArgument('trigger2image_delay_us', default_value='0'),
         DeclareLaunchArgument('trigger_out_delay_us', default_value='0'),
-        DeclareLaunchArgument('trigger_out_enabled', default_value='false'),
+        DeclareLaunchArgument('trigger_out_enabled', default_value='true'),
+        DeclareLaunchArgument('frames_per_trigger', default_value='2'),
+        DeclareLaunchArgument('software_trigger_period', default_value='33'),  # ms
         DeclareLaunchArgument('enable_frame_sync', default_value='true'),
         DeclareLaunchArgument('ordered_pc', default_value='false'),
         DeclareLaunchArgument('use_hardware_time', default_value='true'),
@@ -155,6 +162,8 @@ def generate_launch_description():
         DeclareLaunchArgument('retry_on_usb3_detection_failure', default_value='false'),
         DeclareLaunchArgument('laser_energy_level', default_value='-1'),
         DeclareLaunchArgument('enable_3d_reconstruction_mode', default_value='false'),
+        DeclareLaunchArgument('enable_sync_host_time', default_value='true'),
+        DeclareLaunchArgument('time_domain', default_value='device'),
         DeclareLaunchArgument('config_file_path', default_value=''),
     ]
 
