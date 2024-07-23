@@ -11,7 +11,6 @@ supports ROS 2 Foxy, Humble, and Jazzy distributions.
   * [Table of Contents](#table-of-contents)
   * [Usage with Docker Compose](#usage-with-docker-compose)
     * [Setup for pulling container from ghcr.io](#setup-for-pulling-container-from-ghcrio)
-    * [Setup for building the container on device](#setup-for-building-the-container-on-device)
   * [Installation Instructions](#installation-instructions)
   * [Getting start](#getting-start)
   * [Launch parameters](#launch-parameters)
@@ -63,6 +62,9 @@ Clone this reposiotory
 git clone https://github.com/AIResearchLab/OrbbecSDK_ROS2.git
 ```
 
+<details> 
+<summary> <h3> on AMD64 </h3> </summary>
+  
 Pull the Docker image and start compose (No need to run `docker compose build`)
 ```bash
 cd src/OrbbecSDK_ROS2/docker
@@ -70,19 +72,28 @@ docker compose pull
 docker compose up
 ```
 
-### Setup for building the container on device
-
-Clone this reposiotory
-
+Reset the system and remove volume
 ```bash
-git clone https://github.com/AIResearchLab/OrbbecSDK_ROS2.git
+docker compose down
 ```
 
-Build the Docker image and start compose
+</details>
+
+<details> 
+<summary> <h3> on JetsonNano </h3> </summary>
+  
+Pull the Docker image and start compose (No need to run `docker compose build`)
 ```bash
-cd src/OrbbecSDK_ROS2/docker
-docker compose -f compose-build.yaml build
-docker compose -f compose-build.yaml up
+cd src/boxmotOrbbecSDK_ROS2_ros/docker
+docker compose -f compose.jnano.yaml pull
+docker compose -f compose.jnano.yaml up
+```
+
+Reset the system and remove volume
+```bash
+docker compose -f compose.jnano.yaml down
+```
+</details>
 ```
 
 ## Installation Instructions

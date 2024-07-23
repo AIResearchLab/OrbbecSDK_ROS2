@@ -1,7 +1,6 @@
 services:
   orbbec:
-    build:
-      dockerfile: Dockerfile
+    image: ghcr.io/airesearchlab/orbbec:humble-j-nano
     command: ros2 launch orbbec_camera femto_bolt.launch.py
     restart: unless-stopped
     privileged: true
