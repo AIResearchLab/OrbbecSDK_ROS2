@@ -1,4 +1,4 @@
-name: ROS Humble Astra Control stack for Jetson Nano
+name: ROS Humble Orbbec for Jetson Nano
 
 on:
   workflow_dispatch:

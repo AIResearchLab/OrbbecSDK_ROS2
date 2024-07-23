@@ -1,4 +1,4 @@
-name: ROS Humble Astra Control stack for AMD64 and ARM64
+name: ROS Humble Orbbec for AMD64 and ARM64
 
 on:
   workflow_dispatch:
