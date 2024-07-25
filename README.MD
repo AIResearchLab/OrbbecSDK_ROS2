@@ -61,9 +61,6 @@ Clone this reposiotory
 ```bash
 git clone https://github.com/AIResearchLab/OrbbecSDK_ROS2.git
 ```
-
-<details> 
-<summary> <h3> on AMD64 </h3> </summary>
   
 Pull the Docker image and start compose (No need to run `docker compose build`)
 ```bash
@@ -77,23 +74,7 @@ Reset the system and remove volume
 docker compose down
 ```
 
-</details>
 
-<details> 
-<summary> <h3> on JetsonNano </h3> </summary>
-  
-Pull the Docker image and start compose (No need to run `docker compose build`)
-```bash
-cd src/boxmotOrbbecSDK_ROS2_ros/docker
-docker compose -f compose.jnano.yaml pull
-docker compose -f compose.jnano.yaml up
-```
-
-Reset the system and remove volume
-```bash
-docker compose -f compose.jnano.yaml down
-```
-</details>
 ```
 
 ## Installation Instructions
